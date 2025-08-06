@@ -1,0 +1,373 @@
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { createChart, IChartApi, LineData } from 'lightweight-charts';
+import './TradingChart.css';
+
+interface TradingChartProps {
+  symbol?: string;
+  onSymbolChange?: (symbol: string) => void;
+}
+
+const TradingChart: React.FC<TradingChartProps> = ({ symbol = 'RELIANCE', onSymbolChange }) => {
+  const chartContainerRef = useRef<HTMLDivElement>(null);
+  const chartRef = useRef<IChartApi | null>(null);
+  const priceSeriesRef = useRef<any>(null);
+  const [currentSymbol, setCurrentSymbol] = useState(symbol);
+  const [isLoading, setIsLoading] = useState(false);
+  const [timeframe, setTimeframe] = useState('1D');
+  const [currentPrice, setCurrentPrice] = useState(0);
+  const [priceChange, setPriceChange] = useState(0);
+
+  // Popular Indian stocks for quick selection
+  const popularStocks = [
+    'RELIANCE', 'TCS', 'HDFCBANK', 'INFY', 'HINDUNILVR',
+    'ICICIBANK', 'BHARTIARTL', 'SBIN', 'LT', 'WIPRO'
+  ];
+
+  // Generate sample data
+  const generateSampleData = (symbol: string): LineData[] => {
+    const priceLineData: LineData[] = [];
+    
+    let basePrice = 2500;
+    if (symbol === 'TCS') basePrice = 3200;
+    if (symbol === 'HDFCBANK') basePrice = 1600;
+    if (symbol === 'INFY') basePrice = 1400;
+    if (symbol === 'HINDUNILVR') basePrice = 2200;
+    if (symbol === 'ICICIBANK') basePrice = 950;
+    if (symbol === 'BHARTIARTL') basePrice = 800;
+    if (symbol === 'SBIN') basePrice = 550;
+    if (symbol === 'LT') basePrice = 2800;
+    if (symbol === 'WIPRO') basePrice = 450;
+    
+    const now = Math.floor(Date.now() / 1000);
+    const oneDay = 24 * 60 * 60;
+    
+    for (let i = 30; i >= 0; i--) {
+      const time = now - (i * oneDay);
+      const randomFactor = 0.98 + Math.random() * 0.04; // ±2% variation
+      const price = basePrice * randomFactor;
+      
+      priceLineData.push({
+        time: time as any,
+        value: Number(price.toFixed(2))
+      });
+      
+      basePrice = price;
+    }
+    
+    return priceLineData;
+  };
+
+  const loadChartData = useCallback(async (symbol: string) => {
+    setIsLoading(true);
+    try {
+      // Try to fetch from API first
+      try {
+        const response = await fetch('http://localhost:8000/api/v1/chart-data', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            symbol: symbol,
+            timeframe: timeframe
+          })
+        });
+
+        if (response.ok) {
+          const apiData = await response.json();
+          const lineData: LineData[] = apiData.candlestick_data.map((item: any) => ({
+            time: item.time,
+            value: item.close
+          }));
+          
+          if (priceSeriesRef.current) {
+            priceSeriesRef.current.setData(lineData);
+            setCurrentPrice(apiData.current_price);
+            setPriceChange(apiData.change_percent);
+          }
+          return;
+        }
+      } catch (apiError) {
+        console.log('API unavailable, using sample data');
+      }
+      
+      // Fallback to sample data
+      const data = generateSampleData(symbol);
+      if (priceSeriesRef.current) {
+        priceSeriesRef.current.setData(data);
+        setCurrentPrice(data[data.length - 1]?.value || 0);
+        setPriceChange(Math.random() * 4 - 2); // Random change for demo
+      }
+    } catch (error) {
+      console.error('Error loading chart data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [timeframe]);
+
+  useEffect(() => {
+    if (!chartContainerRef.current) return;
+
+    const chart = createChart(chartContainerRef.current, {
+      width: chartContainerRef.current.clientWidth,
+      height: 500,
+      layout: {
+        background: { color: '#1a1a1a' },
+        textColor: '#ffffff',
+      },
+      grid: {
+        vertLines: { color: '#2a2a2a' },
+        horzLines: { color: '#2a2a2a' },
+      },
+      rightPriceScale: {
+        borderColor: '#485158',
+      },
+      timeScale: {
+        borderColor: '#485158',
+        timeVisible: true,
+        secondsVisible: false,
+      },
+    });
+
+    const priceSeries = chart.addLineSeries({
+      color: '#3b82f6',
+      lineWidth: 3,
+      crosshairMarkerVisible: true,
+      crosshairMarkerRadius: 6,
+      priceLineVisible: true,
+      lastValueVisible: true,
+    });
+
+    chartRef.current = chart;
+    priceSeriesRef.current = priceSeries;
+
+    const handleResize = () => {
+      if (chartContainerRef.current) {
+        chart.applyOptions({
+          width: chartContainerRef.current.clientWidth,
+        });
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      chart.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (chartRef.current && priceSeriesRef.current) {
+      loadChartData(currentSymbol);
+    }
+  }, [currentSymbol, loadChartData]);
+
+  const handleSymbolChange = (newSymbol: string) => {
+    setCurrentSymbol(newSymbol);
+    if (onSymbolChange) {
+      onSymbolChange(newSymbol);
+    }
+  };
+
+  const timeframes = ['1D', '1W', '1M', '3M', '6M', '1Y'];
+
+  return (
+    <div className="trading-chart">
+      <div className="chart-header">
+        <div className="chart-controls">
+          <div className="symbol-selector">
+            <label htmlFor="symbol-select">Symbol:</label>
+            <select
+              id="symbol-select"
+              value={currentSymbol}
+              onChange={(e) => handleSymbolChange(e.target.value)}
+              className="symbol-select"
+            >
+              {popularStocks.map((stock) => (
+                <option key={stock} value={stock}>
+                  {stock}
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="timeframe-selector">
+            {timeframes.map((tf) => (
+              <button
+                key={tf}
+                className={`timeframe-btn ${timeframe === tf ? 'active' : ''}`}
+                onClick={() => setTimeframe(tf)}
+              >
+                {tf}
+              </button>
+            ))}
+          </div>
+        </div>
+        
+        <div className="chart-info">
+          <h3>{currentSymbol}</h3>
+          {currentPrice > 0 && (
+            <div className="price-info">
+              <span className="current-price">₹{currentPrice.toFixed(2)}</span>
+              <span className={`price-change ${priceChange >= 0 ? 'positive' : 'negative'}`}>
+                {priceChange >= 0 ? '+' : ''}{priceChange.toFixed(2)}%
+              </span>
+            </div>
+          )}
+          {isLoading && <span className="loading">Loading...</span>}
+        </div>
+      </div>
+      
+      <div className="chart-container" ref={chartContainerRef}>
+        {isLoading && (
+          <div className="chart-loading">
+            <div className="spinner"></div>
+            <p>Loading chart data...</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default TradingChart;
+
+  useEffect(() => {
+    if (!chartContainerRef.current) return;
+
+    // Create chart
+    const chart = createChart(chartContainerRef.current, {
+      width: chartContainerRef.current.clientWidth,
+      height: 500,
+      layout: {
+        background: { color: '#1a1a1a' },
+        textColor: '#ffffff',
+      },
+      grid: {
+        vertLines: { color: '#2a2a2a' },
+        horzLines: { color: '#2a2a2a' },
+      },
+      rightPriceScale: {
+        borderColor: '#485158',
+      },
+      timeScale: {
+        borderColor: '#485158',
+        timeVisible: true,
+        secondsVisible: false,
+      },
+    });
+
+    // Create candlestick series
+    const candlestickSeries = chart.addSeries('Candlestick', {
+      upColor: '#4ade80',
+      downColor: '#ef4444',
+      borderDownColor: '#ef4444',
+      borderUpColor: '#4ade80',
+      wickDownColor: '#ef4444',
+      wickUpColor: '#4ade80',
+    });
+
+    // Create volume series
+    const volumeSeries = chart.addSeries('Histogram', {
+      color: '#26a69a',
+      priceFormat: {
+        type: 'volume',
+      },
+      priceScaleId: '',
+      scaleMargins: {
+        top: 0.8,
+        bottom: 0,
+      },
+    });
+
+    chartRef.current = chart;
+    candlestickSeriesRef.current = candlestickSeries;
+    volumeSeriesRef.current = volumeSeries;
+
+    // Handle resize
+    const handleResize = () => {
+      if (chartContainerRef.current) {
+        chart.applyOptions({
+          width: chartContainerRef.current.clientWidth,
+        });
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      chart.remove();
+    };
+  }, []);
+
+  // Load chart data when symbol changes
+  useEffect(() => {
+    if (chartRef.current && candlestickSeriesRef.current && volumeSeriesRef.current) {
+      loadChartData(currentSymbol);
+    }
+  }, [currentSymbol, loadChartData]);
+
+  const handleSymbolChange = (newSymbol: string) => {
+    setCurrentSymbol(newSymbol);
+    loadChartData(newSymbol);
+    if (onSymbolChange) {
+      onSymbolChange(newSymbol);
+    }
+  };
+
+  const timeframes = ['1D', '1W', '1M', '3M', '6M', '1Y'];
+
+  return (
+    <div className="trading-chart">
+      <div className="chart-header">
+        <div className="chart-controls">
+          <div className="symbol-selector">
+            <label htmlFor="symbol-select">Symbol:</label>
+            <select
+              id="symbol-select"
+              value={currentSymbol}
+              onChange={(e) => handleSymbolChange(e.target.value)}
+              className="symbol-select"
+            >
+              {popularStocks.map((stock) => (
+                <option key={stock} value={stock}>
+                  {stock}
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="timeframe-selector">
+            {timeframes.map((tf) => (
+              <button
+                key={tf}
+                className={`timeframe-btn ${timeframe === tf ? 'active' : ''}`}
+                onClick={() => setTimeframe(tf)}
+              >
+                {tf}
+              </button>
+            ))}
+          </div>
+        </div>
+        
+        <div className="chart-info">
+          <h3>{currentSymbol}</h3>
+          {isLoading && <span className="loading">Loading...</span>}
+        </div>
+      </div>
+      
+      <div className="chart-container" ref={chartContainerRef}>
+        {isLoading && (
+          <div className="chart-loading">
+            <div className="spinner"></div>
+            <p>Loading chart data...</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default TradingChart;

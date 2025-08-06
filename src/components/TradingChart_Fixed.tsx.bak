@@ -1,0 +1,286 @@
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { createChart, IChartApi, ISeriesApi, CandlestickData, HistogramData } from 'lightweight-charts';
+import './TradingChart.css';
+
+interface TradingChartProps {
+  symbol?: string;
+  onSymbolChange?: (symbol: string) => void;
+}
+
+interface ChartDataPoint {
+  time: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
+const TradingChart: React.FC<TradingChartProps> = ({ symbol = 'RELIANCE', onSymbolChange }) => {
+  const chartContainerRef = useRef<HTMLDivElement>(null);
+  const chartRef = useRef<IChartApi | null>(null);
+  const candlestickSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
+  const volumeSeriesRef = useRef<ISeriesApi<'Histogram'> | null>(null);
+  
+  const [currentSymbol, setCurrentSymbol] = useState(symbol);
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentPrice, setCurrentPrice] = useState<number | null>(null);
+  const [priceChange, setPriceChange] = useState<{ value: number; percent: number } | null>(null);
+
+  const symbols = ['RELIANCE', 'TCS', 'INFY', 'HDFC', 'ITC', 'SBIN', 'BAJFINANCE', 'LT'];
+  const timeframes = ['1D', '1W', '1M', '3M', '6M', '1Y'];
+
+  const loadChartData = useCallback(async (selectedSymbol: string) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`http://localhost:8000/api/chart-data?symbol=${selectedSymbol}`);
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (candlestickSeriesRef.current && data.candlestick_data) {
+          const candlestickData: CandlestickData[] = data.candlestick_data.map((item: any) => ({
+            time: item.time,
+            open: item.open,
+            high: item.high,
+            low: item.low,
+            close: item.close,
+          }));
+          candlestickSeriesRef.current.setData(candlestickData);
+        }
+        
+        if (volumeSeriesRef.current && data.volume_data) {
+          const volumeData: HistogramData[] = data.volume_data.map((item: any) => ({
+            time: item.time,
+            value: item.value,
+            color: item.value > 1000000 ? '#4ade80' : '#ef4444',
+          }));
+          volumeSeriesRef.current.setData(volumeData);
+        }
+        
+        setCurrentPrice(data.current_price);
+        setPriceChange({
+          value: data.change_value || 0,
+          percent: data.change_percent || 0
+        });
+      } else {
+        // Fallback to sample data
+        loadSampleData(selectedSymbol);
+      }
+    } catch (error) {
+      console.error('Error loading chart data:', error);
+      loadSampleData(selectedSymbol);
+    }
+    setIsLoading(false);
+  }, []);
+
+  const loadSampleData = (selectedSymbol: string) => {
+    // Generate sample data
+    const sampleData: ChartDataPoint[] = [];
+    const basePrice = 2500 + Math.random() * 1000;
+    let currentPrice = basePrice;
+    
+    for (let i = 0; i < 30; i++) {
+      const date = new Date();
+      date.setDate(date.getDate() - (29 - i));
+      
+      const change = (Math.random() - 0.5) * 100;
+      const open = currentPrice;
+      const close = currentPrice + change;
+      const high = Math.max(open, close) + Math.random() * 50;
+      const low = Math.min(open, close) - Math.random() * 50;
+      const volume = Math.floor(Math.random() * 2000000) + 500000;
+      
+      sampleData.push({
+        time: date.toISOString().split('T')[0],
+        open,
+        high,
+        low,
+        close,
+        volume
+      });
+      
+      currentPrice = close;
+    }
+    
+    if (candlestickSeriesRef.current) {
+      const candlestickData: CandlestickData[] = sampleData.map(item => ({
+        time: item.time,
+        open: item.open,
+        high: item.high,
+        low: item.low,
+        close: item.close,
+      }));
+      candlestickSeriesRef.current.setData(candlestickData);
+    }
+    
+    if (volumeSeriesRef.current) {
+      const volumeData: HistogramData[] = sampleData.map(item => ({
+        time: item.time,
+        value: item.volume,
+        color: item.close > item.open ? '#4ade80' : '#ef4444',
+      }));
+      volumeSeriesRef.current.setData(volumeData);
+    }
+    
+    const lastDataPoint = sampleData[sampleData.length - 1];
+    setCurrentPrice(lastDataPoint.close);
+    const change = lastDataPoint.close - lastDataPoint.open;
+    setPriceChange({
+      value: change,
+      percent: (change / lastDataPoint.open) * 100
+    });
+  };
+
+  useEffect(() => {
+    if (!chartContainerRef.current) return;
+
+    // Create chart
+    const chart = createChart(chartContainerRef.current, {
+      width: chartContainerRef.current.clientWidth,
+      height: 500,
+      layout: {
+        background: { color: '#1a1a1a' },
+        textColor: '#ffffff',
+      },
+      grid: {
+        vertLines: { color: '#334155' },
+        horzLines: { color: '#334155' },
+      },
+      crosshair: {
+        mode: 1,
+      },
+      rightPriceScale: {
+        borderColor: '#485563',
+      },
+      timeScale: {
+        borderColor: '#485563',
+        timeVisible: true,
+        secondsVisible: false,
+      },
+    });
+
+    // Create candlestick series using correct v5.0.8 API
+    const candlestickSeries = chart.addCandlestickSeries({
+      upColor: '#4ade80',
+      downColor: '#ef4444',
+      borderDownColor: '#ef4444',
+      borderUpColor: '#4ade80',
+      wickDownColor: '#ef4444',
+      wickUpColor: '#4ade80',
+    });
+
+    // Create volume series
+    const volumeSeries = chart.addHistogramSeries({
+      color: '#26a69a',
+      priceFormat: {
+        type: 'volume',
+      },
+      priceScaleId: '',
+      scaleMargins: {
+        top: 0.8,
+        bottom: 0,
+      },
+    });
+
+    chartRef.current = chart;
+    candlestickSeriesRef.current = candlestickSeries;
+    volumeSeriesRef.current = volumeSeries;
+
+    // Handle resize
+    const handleResize = () => {
+      if (chartContainerRef.current) {
+        chart.applyOptions({
+          width: chartContainerRef.current.clientWidth,
+        });
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    // Load initial data
+    loadChartData(currentSymbol);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      chart.remove();
+    };
+  }, []);
+
+  // Load chart data when symbol changes
+  useEffect(() => {
+    if (chartRef.current && candlestickSeriesRef.current && volumeSeriesRef.current) {
+      loadChartData(currentSymbol);
+    }
+  }, [currentSymbol, loadChartData]);
+
+  const handleSymbolChange = (newSymbol: string) => {
+    setCurrentSymbol(newSymbol);
+    if (onSymbolChange) {
+      onSymbolChange(newSymbol);
+    }
+  };
+
+  return (
+    <div className="trading-chart">
+      <div className="chart-header">
+        <div className="chart-controls">
+          <div className="symbol-selector">
+            <label htmlFor="symbol-select">Symbol:</label>
+            <select
+              id="symbol-select"
+              value={currentSymbol}
+              onChange={(e) => handleSymbolChange(e.target.value)}
+              className="symbol-select"
+            >
+              {symbols.map((sym) => (
+                <option key={sym} value={sym}>
+                  {sym}
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="timeframe-selector">
+            {timeframes.map((tf) => (
+              <button
+                key={tf}
+                className="timeframe-btn"
+                onClick={() => console.log('Timeframe:', tf)}
+              >
+                {tf}
+              </button>
+            ))}
+          </div>
+        </div>
+        
+        <div className="price-info">
+          {currentPrice && (
+            <>
+              <div className="current-price">
+                ₹{currentPrice.toFixed(2)}
+              </div>
+              {priceChange && (
+                <div className={`price-change ${priceChange.value >= 0 ? 'positive' : 'negative'}`}>
+                  {priceChange.value >= 0 ? '+' : ''}₹{priceChange.value.toFixed(2)} 
+                  ({priceChange.value >= 0 ? '+' : ''}{priceChange.percent.toFixed(2)}%)
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+      
+      <div className="chart-container">
+        {isLoading && (
+          <div className="loading-overlay">
+            <div className="loading-spinner"></div>
+            <p>Loading chart data...</p>
+          </div>
+        )}
+        <div ref={chartContainerRef} className="chart" />
+      </div>
+    </div>
+  );
+};
+
+export default TradingChart;
