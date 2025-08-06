@@ -1,0 +1,86 @@
+[
+  {
+    "user_message": "Hi, what's the current price of Reliance?",
+    "conversation_id": 0,
+    "message_index": 0,
+    "timestamp": "2025-08-04T21:39:14.761255",
+    "context": "multi_turn_conversation"
+  },
+  {
+    "user_message": "Can you tell me why Reliance is moving up today?",
+    "conversation_id": 0,
+    "message_index": 1,
+    "timestamp": "2025-08-04T21:39:14.761271",
+    "context": "multi_turn_conversation"
+  },
+  {
+    "user_message": "Should I buy more Reliance shares?",
+    "conversation_id": 0,
+    "message_index": 2,
+    "timestamp": "2025-08-04T21:39:14.761275",
+    "context": "multi_turn_conversation"
+  },
+  {
+    "user_message": "What's your price target for Reliance?",
+    "conversation_id": 0,
+    "message_index": 3,
+    "timestamp": "2025-08-04T21:39:14.761278",
+    "context": "multi_turn_conversation"
+  },
+  {
+    "user_message": "How is the market performing today?",
+    "conversation_id": 1,
+    "message_index": 0,
+    "timestamp": "2025-08-04T21:39:14.761282",
+    "context": "multi_turn_conversation"
+  },
+  {
+    "user_message": "Which sectors are doing well?",
+    "conversation_id": 1,
+    "message_index": 1,
+    "timestamp": "2025-08-04T21:39:14.761286",
+    "context": "multi_turn_conversation"
+  },
+  {
+    "user_message": "Any specific stock recommendations in IT sector?",
+    "conversation_id": 1,
+    "message_index": 2,
+    "timestamp": "2025-08-04T21:39:14.761289",
+    "context": "multi_turn_conversation"
+  },
+  {
+    "user_message": "What about TCS vs Infosys?",
+    "conversation_id": 1,
+    "message_index": 3,
+    "timestamp": "2025-08-04T21:39:14.761292",
+    "context": "multi_turn_conversation"
+  },
+  {
+    "user_message": "I want to start investing in stocks",
+    "conversation_id": 2,
+    "message_index": 0,
+    "timestamp": "2025-08-04T21:39:14.761295",
+    "context": "multi_turn_conversation"
+  },
+  {
+    "user_message": "What are some beginner-friendly stocks?",
+    "conversation_id": 2,
+    "message_index": 1,
+    "timestamp": "2025-08-04T21:39:14.761298",
+    "context": "multi_turn_conversation"
+  },
+  {
+    "user_message": "How much should I invest initially?",
+    "conversation_id": 2,
+    "message_index": 2,
+    "timestamp": "2025-08-04T21:39:14.761301",
+    "context": "multi_turn_conversation"
+  },
+  {
+    "user_message": "What's the risk in HDFC Bank?",
+    "conversation_id": 2,
+    "message_index": 3,
+    "timestamp": "2025-08-04T21:39:14.761304",
+    "context": "multi_turn_conversation"
+  }
+]

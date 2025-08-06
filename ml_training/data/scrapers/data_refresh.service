@@ -1,0 +1,17 @@
+[Unit]
+Description=Dalaal Street Financial Data Refresh Service
+After=network.target
+
+[Service]
+Type=simple
+User=codespace
+WorkingDirectory=/home/codespace/Dalaal-street-chatbot
+ExecStart=/usr/bin/python3 /home/codespace/Dalaal-street-chatbot/ml_training/data/scrapers/data_refresh_scheduler.py --daemon
+Restart=on-failure
+RestartSec=30
+StandardOutput=journal
+StandardError=journal
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target
