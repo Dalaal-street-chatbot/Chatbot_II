@@ -4,7 +4,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from app.services.groq_service import groq_service
+# Groq service removed - using Azure OpenAI as primary
 from app.services.ai_services import codestral_service, deepseek_service, ollama_service
 from app.services.cloud_ai_services import azure_openai_service, google_ai_service
 from app.services.enhanced_news_service import enhanced_news_service
@@ -16,13 +16,13 @@ class ComprehensiveChatService:
     """Orchestrates multiple AI services for comprehensive financial assistance"""
     
     def __init__(self):
-        self.primary_ai = groq_service  # Groq as main NLP AI
+        self.primary_ai = azure_openai_service  # Azure OpenAI as main NLP AI (Enterprise-grade)
+        self.fallback_ai = google_ai_service   # Google AI as fallback
         self.services = {
-            'groq': groq_service,
+            'azure': azure_openai_service,  # Primary enterprise AI
+            'google': google_ai_service,   # Primary fallback
             'codestral': codestral_service,
             'deepseek': deepseek_service,
-            'azure': azure_openai_service,
-            'google': google_ai_service,
             'ollama': ollama_service
         }
     
@@ -78,7 +78,7 @@ class ComprehensiveChatService:
                 'intent': 'general_info',
                 'entities': [],
                 'confidence': 0.5,
-                'services_used': ['groq'],
+                'services_used': ['azure'],
                 'error': str(e)
             }
     
@@ -175,7 +175,12 @@ class ComprehensiveChatService:
     ) -> Dict[str, Any]:
         """Select appropriate AI services based on query characteristics"""
         
-        services = {'groq': self.services['groq']}  # Always include primary
+        # Start with Azure OpenAI as primary, then add Google AI as fallback
+        services = {
+            'azure': self.services['azure'],  # Primary enterprise AI
+            'google': self.services['google']  # Reliable fallback
+        }
+        
         intent = analysis.get('intent', 'general_info')
         urgency = analysis.get('urgency', 'low')
         
@@ -185,12 +190,6 @@ class ComprehensiveChatService:
         
         if 'analysis' in user_message.lower() or 'reasoning' in user_message.lower():
             services['deepseek'] = self.services['deepseek']
-        
-        if urgency == 'high' or 'enterprise' in user_message.lower():
-            services['azure'] = self.services['azure']
-        
-        if 'prediction' in user_message.lower() or 'forecast' in user_message.lower():
-            services['google'] = self.services['google']
             
         # Add Google Cloud services for specific use cases
         lower_msg = user_message.lower()
@@ -232,8 +231,8 @@ class ComprehensiveChatService:
         tasks = []
         
         for service_name, service in services.items():
-            if service_name == 'groq':
-                task = self._call_groq_service(user_message, context_data)
+            if service_name == 'azure':
+                task = self._call_azure_service(user_message, context_data)
             elif service_name == 'codestral':
                 task = self._call_codestral_service(user_message, analysis)
             elif service_name == 'deepseek':
@@ -272,9 +271,9 @@ class ComprehensiveChatService:
         
         return responses
     
-    async def _call_groq_service(self, message: str, context: Dict[str, Any]) -> str:
-        """Call Groq service"""
-        return await groq_service.generate_response(message, context)
+    async def _call_azure_service(self, message: str, context: Dict[str, Any]) -> str:
+        """Call Azure OpenAI service (replaces Groq)"""
+        return await azure_openai_service.generate_response(message, context)
     
     async def _call_codestral_service(self, message: str, analysis: Dict[str, Any]) -> str:
         """Call Codestral service if code-related"""
@@ -417,7 +416,7 @@ class ComprehensiveChatService:
     ) -> str:
         """Synthesize final response from multiple AI outputs"""
         
-        # Use Groq as the primary synthesizer
+        # Use Azure OpenAI as the primary synthesizer (replaces Groq)
         synthesis_prompt = f"""
         Synthesize a comprehensive response to: "{user_message}"
         
@@ -438,7 +437,7 @@ class ComprehensiveChatService:
         """
         
         try:
-            final_response = await groq_service.generate_response(
+            final_response = await azure_openai_service.generate_response(
                 synthesis_prompt,
                 context=context_data,
                 system_prompt="You are a master financial synthesizer. Create unified responses from multiple AI insights."
@@ -447,7 +446,7 @@ class ComprehensiveChatService:
         
         except Exception as e:
             # Fallback to primary response
-            return responses.get('groq', 'I apologize, but I encountered an issue processing your request.')
+            return responses.get('azure', 'I apologize, but I encountered an issue processing your request.')
     
     def _format_responses_for_synthesis(self, responses: Dict[str, Any]) -> str:
         """Format responses for synthesis prompt"""
