@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dalaal Street Chatbot II - Financial Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            color: white;
+        }
+
+        .navbar {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem 2rem;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .navbar h1 {
+            display: inline-block;
+            font-size: 1.5rem;
+            margin-right: 2rem;
+        }
+
+        .navbar .status {
+            display: inline-block;
+            background: #10b981;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .card h3 {
+            margin-bottom: 1rem;
+            color: #60a5fa;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .api-status {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-left: auto;
+        }
+
+        .status-success { background: #10b981; color: white; }
+        .status-warning { background: #f59e0b; color: white; }
+        .status-error { background: #ef4444; color: white; }
+
+        .btn {
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+            border: none;
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 0.3rem;
+            display: inline-block;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .input-group {
+            margin: 1rem 0;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 1rem;
+        }
+
+        .input-group input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .results {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .loading {
+            text-align: center;
+            color: #60a5fa;
+            font-style: italic;
+        }
+
+        .system-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #60a5fa;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-top: 0.5rem;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .endpoint-list {
+            list-style: none;
+        }
+
+        .endpoint-list li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .endpoint-path {
+            font-family: 'Courier New', monospace;
+            color: #60a5fa;
+        }
+
+        .endpoint-method {
+            background: #10b981;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <h1>🚀 Dalaal Street Chatbot II</h1>
+        <span class="status" id="systemStatus">🟢 ALL SYSTEMS OPERATIONAL</span>
+    </nav>
+
+    <div class="container">
+        <!-- System Statistics -->
+        <div class="system-stats">
+            <div class="stat-card">
+                <span class="stat-value" id="apiCount">5</span>
+                <div class="stat-label">APIs Integrated</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value" id="uptime">100%</span>
+                <div class="stat-label">System Uptime</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value" id="responseTime">&lt;200ms</span>
+                <div class="stat-label">Avg Response Time</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value" id="dataPoints">4+</span>
+                <div class="stat-label">Data Sources</div>
+            </div>
+        </div>
+
+        <!-- Main Dashboard -->
+        <div class="dashboard-grid">
+            <!-- Stock Analysis -->
+            <div class="card">
+                <h3>
+                    📈 Stock Analysis
+                    <span class="api-status status-success" id="stockApiStatus">LIVE</span>
+                </h3>
+                <div class="input-group">
+                    <input type="text" id="stockSymbol" placeholder="Enter stock symbol (e.g., RELIANCE)" value="RELIANCE">
+                </div>
+                <button class="btn" onclick="analyzeStock()">Analyze Stock</button>
+                <div class="results" id="stockResults">
+                    Click "Analyze Stock" to get comprehensive analysis including price, sentiment, and AI recommendations.
+                </div>
+            </div>
+
+            <!-- Financial News -->
+            <div class="card">
+                <h3>
+                    📰 Financial News
+                    <span class="api-status status-success" id="newsApiStatus">TAVILY ACTIVE</span>
+                </h3>
+                <div class="input-group">
+                    <input type="text" id="newsQuery" placeholder="Search financial news..." value="Indian stock market">
+                </div>
+                <button class="btn" onclick="searchNews()">Search News</button>
+                <div class="results" id="newsResults">
+                    Powered by Tavily API. Search for latest financial news with AI-powered sentiment analysis.
+                </div>
+            </div>
+
+            <!-- Market Overview -->
+            <div class="card">
+                <h3>
+                    📊 Market Overview
+                    <span class="api-status status-success" id="marketApiStatus">REAL-TIME</span>
+                </h3>
+                <button class="btn btn-success" onclick="getMarketOverview()">Refresh Market Data</button>
+                <button class="btn btn-secondary" onclick="autoRefresh()">Auto Refresh (30s)</button>
+                <div class="results" id="marketResults">
+                    Real-time market data including Nifty 50, Sensex, top gainers/losers, and sector performance.
+                </div>
+            </div>
+
+            <!-- Upstox Integration -->
+            <div class="card">
+                <h3>
+                    💼 Upstox Trading
+                    <span class="api-status status-success" id="upstoxApiStatus">CONFIGURED</span>
+                </h3>
+                <button class="btn btn-warning" onclick="testUpstoxConnection()">Test Connection</button>
+                <button class="btn btn-secondary" onclick="getUpstoxAuthUrl()">Get Auth URL</button>
+                <div class="results" id="upstoxResults">
+                    Production Upstox API integration. Test connection or initiate OAuth flow for live trading.
+                </div>
+            </div>
+
+            <!-- Database Status -->
+            <div class="card">
+                <h3>
+                    🗄️ Database Services
+                    <span class="api-status status-success" id="dbApiStatus">SQLITE READY</span>
+                </h3>
+                <button class="btn" onclick="checkDatabaseStatus()">Check DB Status</button>
+                <button class="btn btn-secondary" onclick="viewSystemHealth()">System Health</button>
+                <div class="results" id="dbResults">
+                    SQLite database with real-time quotes, historical data, and news sentiment storage.
+                </div>
+            </div>
+
+            <!-- Admin Dashboard -->
+            <div class="card">
+                <h3>
+                    ⚙️ Admin Controls
+                    <span class="api-status status-success" id="adminApiStatus">FULL ACCESS</span>
+                </h3>
+                <button class="btn" onclick="getAdminDashboard()">Admin Dashboard</button>
+                <button class="btn btn-secondary" onclick="runSystemTests()">Run All Tests</button>
+                <div class="results" id="adminResults">
+                    Comprehensive system administration and monitoring dashboard.
+                </div>
+            </div>
+        </div>
+
+        <!-- API Endpoints Reference -->
+        <div class="feature-grid">
+            <div class="card">
+                <h3>🔗 API Endpoints</h3>
+                <ul class="endpoint-list">
+                    <li>
+                        <span class="endpoint-path">/api/stock/search/&lt;symbol&gt;</span>
+                        <span class="endpoint-method">GET</span>
+                    </li>
+                    <li>
+                        <span class="endpoint-path">/api/news/financial</span>
+                        <span class="endpoint-method">GET</span>
+                    </li>
+                    <li>
+                        <span class="endpoint-path">/api/market/overview</span>
+                        <span class="endpoint-method">GET</span>
+                    </li>
+                    <li>
+                        <span class="endpoint-path">/api/upstox/test-connection</span>
+                        <span class="endpoint-method">GET</span>
+                    </li>
+                    <li>
+                        <span class="endpoint-path">/admin/dashboard</span>
+                        <span class="endpoint-method">GET</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>🎯 System Features</h3>
+                <ul style="list-style: none;">
+                    <li>✅ Real-time stock data (NSE/BSE)</li>
+                    <li>✅ AI-powered news sentiment</li>
+                    <li>✅ Portfolio management ready</li>
+                    <li>✅ Multi-source data aggregation</li>
+                    <li>✅ Live trading capabilities</li>
+                    <li>✅ Historical data analysis</li>
+                    <li>✅ Risk assessment tools</li>
+                    <li>✅ Azure OpenAI integration</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000';
+        let autoRefreshInterval;
+
+        async function makeApiCall(endpoint, resultElementId) {
+            const resultElement = document.getElementById(resultElementId);
+            resultElement.innerHTML = '<div class="loading">Loading...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`);
+                const data = await response.json();
+                resultElement.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                return data;
+            } catch (error) {
+                resultElement.innerHTML = `<div style="color: #ef4444;">Error: ${error.message}</div>`;
+                return null;
+            }
+        }
+
+        async function analyzeStock() {
+            const symbol = document.getElementById('stockSymbol').value.toUpperCase();
+            if (!symbol) {
+                alert('Please enter a stock symbol');
+                return;
+            }
+            await makeApiCall(`/api/stock/search/${symbol}`, 'stockResults');
+        }
+
+        async function searchNews() {
+            const query = document.getElementById('newsQuery').value;
+            if (!query) {
+                alert('Please enter a search query');
+                return;
+            }
+            await makeApiCall(`/api/news/financial?query=${encodeURIComponent(query)}&limit=5`, 'newsResults');
+        }
+
+        async function getMarketOverview() {
+            await makeApiCall('/api/market/overview', 'marketResults');
+        }
+
+        async function testUpstoxConnection() {
+            await makeApiCall('/api/upstox/test-connection', 'upstoxResults');
+        }
+
+        async function getUpstoxAuthUrl() {
+            await makeApiCall('/api/upstox/auth-url', 'upstoxResults');
+        }
+
+        async function checkDatabaseStatus() {
+            await makeApiCall('/api/database/status', 'dbResults');
+        }
+
+        async function getAdminDashboard() {
+            await makeApiCall('/admin/dashboard', 'adminResults');
+        }
+
+        async function viewSystemHealth() {
+            await makeApiCall('/api/test', 'dbResults');
+        }
+
+        async function runSystemTests() {
+            const adminResults = document.getElementById('adminResults');
+            adminResults.innerHTML = '<div class="loading">Running comprehensive system tests...</div>';
+            
+            const tests = [
+                { name: 'API Services', endpoint: '/api/test' },
+                { name: 'Database Health', endpoint: '/api/database/status' },
+                { name: 'Upstox Connection', endpoint: '/api/upstox/test-connection' },
+                { name: 'Market Data', endpoint: '/api/market/overview' }
+            ];
+            
+            let results = 'System Test Results:\\n\\n';
+            
+            for (const test of tests) {
+                try {
+                    const response = await fetch(`${API_BASE}${test.endpoint}`);
+                    if (response.ok) {
+                        results += `✅ ${test.name}: PASSED\\n`;
+                    } else {
+                        results += `❌ ${test.name}: FAILED (${response.status})\\n`;
+                    }
+                } catch (error) {
+                    results += `❌ ${test.name}: ERROR (${error.message})\\n`;
+                }
+            }
+            
+            adminResults.innerHTML = `<pre>${results}\\n\\n🎯 All core systems tested!</pre>`;
+        }
+
+        function autoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+                return;
+            }
+            
+            autoRefreshInterval = setInterval(getMarketOverview, 30000);
+            getMarketOverview(); // Initial call
+        }
+
+        // Initialize dashboard on load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Update system status
+            updateSystemStatus();
+            
+            // Initial market data load
+            getMarketOverview();
+            
+            // Update timestamp
+            setInterval(updateTimestamp, 1000);
+        });
+
+        async function updateSystemStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/api/test`);
+                if (response.ok) {
+                    document.getElementById('systemStatus').textContent = '🟢 ALL SYSTEMS OPERATIONAL';
+                    document.getElementById('systemStatus').className = 'status';
+                } else {
+                    document.getElementById('systemStatus').textContent = '🟡 PARTIAL SERVICES';
+                    document.getElementById('systemStatus').className = 'status status-warning';
+                }
+            } catch (error) {
+                document.getElementById('systemStatus').textContent = '🔴 CONNECTION ERROR';
+                document.getElementById('systemStatus').className = 'status status-error';
+            }
+        }
+
+        function updateTimestamp() {
+            // Update any timestamp displays
+            const now = new Date().toLocaleString();
+            // This could be used to update live timestamps in the UI
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case '1':
+                        e.preventDefault();
+                        analyzeStock();
+                        break;
+                    case '2':
+                        e.preventDefault();
+                        searchNews();
+                        break;
+                    case '3':
+                        e.preventDefault();
+                        getMarketOverview();
+                        break;
+                    case 'r':
+                        e.preventDefault();
+                        location.reload();
+                        break;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

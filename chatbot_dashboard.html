@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dalaal Street AI Chatbot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chatbot-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            width: 95%;
+            max-width: 800px;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .chat-header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+        }
+
+        .chat-header .subtitle {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .bot-status {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: #27ae60;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 18px;
+            border-radius: 18px;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            background: #007bff;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+        }
+
+        .bot-message {
+            background: white;
+            color: #333;
+            align-self: flex-start;
+            border: 1px solid #e0e0e0;
+            border-bottom-left-radius: 5px;
+            position: relative;
+        }
+
+        .bot-message::before {
+            content: "🤖";
+            position: absolute;
+            left: -35px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.2rem;
+        }
+
+        .message-info {
+            font-size: 0.7rem;
+            opacity: 0.6;
+            margin-top: 5px;
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .chat-input:focus {
+            border-color: #007bff;
+        }
+
+        .send-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: background 0.3s;
+        }
+
+        .send-button:hover {
+            background: #0056b3;
+        }
+
+        .send-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .quick-action-btn {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .quick-action-btn:hover {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .typing-indicator {
+            display: none;
+            align-self: flex-start;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 18px;
+            border: 1px solid #e0e0e0;
+            margin-left: 30px;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 3px;
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            background: #999;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+
+        .welcome-message {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            margin: 50px 0;
+        }
+
+        .data-sources {
+            background: #e8f5e8;
+            padding: 10px;
+            border-radius: 10px;
+            margin-top: 10px;
+            font-size: 0.8rem;
+            color: #2d5a2d;
+        }
+
+        .portfolio-widget {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 15px;
+            margin: 10px 0;
+            text-align: center;
+        }
+
+        .portfolio-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .portfolio-change {
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .chatbot-container {
+                width: 100%;
+                height: 100vh;
+                border-radius: 0;
+            }
+            
+            .message {
+                max-width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chatbot-container">
+        <div class="chat-header">
+            <div class="bot-status"></div>
+            <h1>🤖 Dalaal Street AI Chatbot</h1>
+            <div class="subtitle">Your AI Financial Assistant with Live Market Data</div>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="welcome-message">
+                <h3>👋 Welcome to Dalaal Street AI!</h3>
+                <p>I'm your personal financial assistant with access to:</p>
+                <div class="data-sources">
+                    ✅ Live Stock Prices (Upstox API)<br>
+                    ✅ Real Portfolio Data<br>
+                    ✅ Latest Financial News (Tavily)<br>
+                    ✅ AI-Powered Analysis
+                </div>
+                <p style="margin-top: 15px;">Ask me anything about stocks, investments, or your portfolio!</p>
+            </div>
+
+            <div class="portfolio-widget" id="portfolioWidget">
+                <div>Your Portfolio</div>
+                <div class="portfolio-value" id="portfolioValue">Loading...</div>
+                <div class="portfolio-change" id="portfolioChange">Fetching live data...</div>
+            </div>
+
+            <div class="quick-actions">
+                <button class="quick-action-btn" onclick="sendQuickMessage('What is the current price of RELIANCE?')">RELIANCE Price</button>
+                <button class="quick-action-btn" onclick="sendQuickMessage('Show my portfolio performance')">Portfolio Status</button>
+                <button class="quick-action-btn" onclick="sendQuickMessage('Latest market news')">Market News</button>
+                <button class="quick-action-btn" onclick="sendQuickMessage('Investment recommendations')">Investment Advice</button>
+            </div>
+
+            <div class="typing-indicator" id="typingIndicator">
+                <div class="typing-dots">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-input-container">
+            <div class="chat-input-wrapper">
+                <input type="text" class="chat-input" id="messageInput" placeholder="Ask about stocks, portfolio, or market news..." onkeypress="handleKeyPress(event)">
+                <button class="send-button" id="sendButton" onclick="sendMessage()">
+                    ➤
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isTyping = false;
+
+        // Load portfolio data on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPortfolioWidget();
+        });
+
+        async function loadPortfolioWidget() {
+            try {
+                const response = await fetch('/api/user/portfolio');
+                const data = await response.json();
+                
+                if (response.ok && data.portfolio_summary) {
+                    const portfolioValue = document.getElementById('portfolioValue');
+                    const portfolioChange = document.getElementById('portfolioChange');
+                    
+                    portfolioValue.textContent = `₹${data.portfolio_summary.current_value.toLocaleString()}`;
+                    
+                    const changeText = data.portfolio_summary.total_pnl >= 0 
+                        ? `+₹${data.portfolio_summary.total_pnl.toLocaleString()} (+${data.portfolio_summary.total_pnl_percent.toFixed(2)}%)`
+                        : `-₹${Math.abs(data.portfolio_summary.total_pnl).toLocaleString()} (${data.portfolio_summary.total_pnl_percent.toFixed(2)}%)`;
+                    
+                    portfolioChange.textContent = changeText;
+                    portfolioChange.style.color = data.portfolio_summary.total_pnl >= 0 ? '#2ecc71' : '#e74c3c';
+                } else {
+                    document.getElementById('portfolioValue').textContent = 'Portfolio Data';
+                    document.getElementById('portfolioChange').textContent = data.data_source || 'Connecting to live data...';
+                }
+            } catch (error) {
+                console.log('Portfolio widget error:', error);
+                document.getElementById('portfolioValue').textContent = 'Portfolio Data';
+                document.getElementById('portfolioChange').textContent = 'Live data integration in progress...';
+            }
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !isTyping) {
+                sendMessage();
+            }
+        }
+
+        function sendQuickMessage(message) {
+            document.getElementById('messageInput').value = message;
+            sendMessage();
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message || isTyping) return;
+            
+            // Add user message to chat
+            addMessage(message, 'user');
+            input.value = '';
+            
+            // Show typing indicator
+            showTyping();
+            
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+                
+                const data = await response.json();
+                
+                // Hide typing indicator
+                hideTyping();
+                
+                if (response.ok) {
+                    // Add bot response
+                    addMessage(data.response, 'bot', data);
+                } else {
+                    addMessage('Sorry, I encountered an error. Please try again.', 'bot');
+                }
+            } catch (error) {
+                hideTyping();
+                addMessage('I\'m having trouble connecting to my services. Please check your connection and try again.', 'bot');
+            }
+        }
+
+        function addMessage(content, sender, metadata = null) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            
+            let messageContent = `<div>${content}</div>`;
+            
+            if (metadata) {
+                const timestamp = new Date().toLocaleTimeString();
+                let infoText = `${timestamp}`;
+                
+                if (metadata.ai_service) {
+                    infoText += ` • ${metadata.ai_service}`;
+                }
+                
+                if (metadata.data_sources && metadata.data_sources.length > 0) {
+                    infoText += ` • Sources: ${metadata.data_sources.join(', ')}`;
+                }
+                
+                messageContent += `<div class="message-info">${infoText}</div>`;
+            }
+            
+            messageDiv.innerHTML = messageContent;
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function showTyping() {
+            isTyping = true;
+            const typingIndicator = document.getElementById('typingIndicator');
+            const sendButton = document.getElementById('sendButton');
+            
+            typingIndicator.style.display = 'block';
+            sendButton.disabled = true;
+            
+            const messagesContainer = document.getElementById('chatMessages');
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function hideTyping() {
+            isTyping = false;
+            const typingIndicator = document.getElementById('typingIndicator');
+            const sendButton = document.getElementById('sendButton');
+            
+            typingIndicator.style.display = 'none';
+            sendButton.disabled = false;
+        }
+
+        // Auto-focus on input
+        document.getElementById('messageInput').focus();
+    </script>
+</body>
+</html>

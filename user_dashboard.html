@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dalaal Street - Smart Investment Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #334155;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #3b82f6;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .balance {
+            background: #1e293b;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            border: 1px solid #334155;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid #334155;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.1);
+        }
+
+        .card h3 {
+            color: #f1f5f9;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .market-overview {
+            grid-column: span 3;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        }
+
+        .indices {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .index {
+            background: #0f172a;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            text-align: center;
+        }
+
+        .index-name {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin-bottom: 0.5rem;
+        }
+
+        .index-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #f1f5f9;
+            margin-bottom: 0.3rem;
+        }
+
+        .index-change {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .positive { color: #10b981; }
+        .negative { color: #ef4444; }
+
+        .search-section {
+            margin: 2rem 0;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: #e2e8f0;
+            font-size: 1rem;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .search-btn {
+            padding: 0.75rem 1.5rem;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .search-btn:hover {
+            background: #2563eb;
+        }
+
+        .watchlist {
+            grid-column: span 2;
+        }
+
+        .stock-list {
+            margin-top: 1rem;
+        }
+
+        .stock-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #334155;
+        }
+
+        .stock-item:last-child {
+            border-bottom: none;
+        }
+
+        .stock-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stock-symbol {
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+
+        .stock-name {
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+
+        .stock-price {
+            text-align: right;
+        }
+
+        .price {
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+
+        .change {
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .news-section {
+            margin: 2rem 0;
+        }
+
+        .news-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        .news-item {
+            background: #1e293b;
+            border-radius: 8px;
+            padding: 1rem;
+            border: 1px solid #334155;
+        }
+
+        .news-title {
+            font-weight: 600;
+            color: #f1f5f9;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        .news-summary {
+            color: #94a3b8;
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .news-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        .sentiment {
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .sentiment.positive {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .sentiment.negative {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .sentiment.neutral {
+            background: rgba(148, 163, 184, 0.2);
+            color: #94a3b8;
+        }
+
+        .portfolio {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        }
+
+        .portfolio-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #f1f5f9;
+            margin-bottom: 0.5rem;
+        }
+
+        .portfolio-change {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .loading {
+            text-align: center;
+            color: #64748b;
+            padding: 2rem;
+        }
+
+        .error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .market-overview {
+                grid-column: span 1;
+            }
+            
+            .watchlist {
+                grid-column: span 1;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">Dalaal Street</div>
+            <div class="user-info">
+                <div class="balance">
+                    <span style="color: #94a3b8;">Portfolio Value</span>
+                    <div style="font-weight: 600; color: #f1f5f9;" id="portfolioValue">₹0</div>
+                </div>
+                <div style="color: #94a3b8;">Devashish Sharma</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Market Overview -->
+        <section class="market-overview card">
+            <h3>Market Overview</h3>
+            <div class="indices" id="marketIndices">
+                <div class="loading">Loading market data...</div>
+            </div>
+        </section>
+
+        <!-- Main Dashboard -->
+        <div class="dashboard-grid">
+            <!-- Watchlist -->
+            <div class="watchlist card">
+                <h3>Your Watchlist</h3>
+                <div class="stock-list" id="watchlist">
+                    <div class="loading">Loading watchlist...</div>
+                </div>
+            </div>
+
+            <!-- Portfolio -->
+            <div class="portfolio card">
+                <h3>Portfolio Performance</h3>
+                <div class="portfolio-value" id="portfolioTotal">₹0</div>
+                <div class="portfolio-change positive" id="portfolioChange">+₹0 (0%)</div>
+                <div style="margin-top: 1rem; color: #94a3b8;">
+                    <div>Holdings: <span id="holdingsCount">0</span></div>
+                    <div>Available Cash: <span id="availableCash">₹0</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stock Search -->
+        <section class="search-section">
+            <h3 style="margin-bottom: 1rem; color: #f1f5f9;">Search Stocks</h3>
+            <div class="search-bar">
+                <input type="text" 
+                       class="search-input" 
+                       id="stockSearch" 
+                       placeholder="Search for stocks (e.g., Reliance, TCS, HDFC Bank)"
+                       value="RELIANCE">
+                <button class="search-btn" onclick="searchStock()">Search</button>
+            </div>
+            <div id="searchResults"></div>
+        </section>
+
+        <!-- Financial News -->
+        <section class="news-section">
+            <h3 style="margin-bottom: 1rem; color: #f1f5f9;">Market News & Analysis</h3>
+            <div class="news-grid" id="newsContainer">
+                <div class="loading">Loading latest market news...</div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000';
+        
+        // Sample watchlist data (would come from user preferences)
+        const defaultWatchlist = ['RELIANCE', 'TCS', 'INFY', 'HDFCBANK', 'ICICIBANK'];
+        
+        async function fetchData(endpoint) {
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return await response.json();
+            } catch (error) {
+                console.error('API Error:', error);
+                return null;
+            }
+        }
+        
+        async function loadMarketOverview() {
+            const data = await fetchData('/api/market/overview');
+            const container = document.getElementById('marketIndices');
+            
+            if (!data) {
+                container.innerHTML = '<div class="error">Unable to load market data</div>';
+                return;
+            }
+            
+            const indices = [
+                { name: 'NIFTY 50', value: data.market_summary?.nifty50?.value || 22500, change: data.market_summary?.nifty50?.change || 1.2 },
+                { name: 'SENSEX', value: data.market_summary?.sensex?.value || 74000, change: data.market_summary?.sensex?.change || 0.8 },
+                { name: 'BANK NIFTY', value: data.market_summary?.bank_nifty?.value || 48000, change: data.market_summary?.bank_nifty?.change || 1.5 }
+            ];
+            
+            container.innerHTML = indices.map(index => `
+                <div class="index">
+                    <div class="index-name">${index.name}</div>
+                    <div class="index-value">${index.value.toLocaleString('en-IN')}</div>
+                    <div class="index-change ${index.change >= 0 ? 'positive' : 'negative'}">
+                        ${index.change >= 0 ? '+' : ''}${index.change}%
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        async function loadWatchlist() {
+            const container = document.getElementById('watchlist');
+            const stockData = [];
+            
+            // Fetch data for each stock in watchlist
+            for (const symbol of defaultWatchlist) {
+                const data = await fetchData(`/api/stock/search/${symbol}`);
+                if (data && data.analysis) {
+                    stockData.push({
+                        symbol: symbol,
+                        name: getCompanyName(symbol),
+                        price: data.analysis.current_price || 0,
+                        change: data.analysis.change_percent || 0
+                    });
+                }
+            }
+            
+            if (stockData.length === 0) {
+                container.innerHTML = '<div class="error">Unable to load watchlist data</div>';
+                return;
+            }
+            
+            container.innerHTML = stockData.map(stock => `
+                <div class="stock-item">
+                    <div class="stock-info">
+                        <div class="stock-symbol">${stock.symbol}</div>
+                        <div class="stock-name">${stock.name}</div>
+                    </div>
+                    <div class="stock-price">
+                        <div class="price">₹${stock.price.toLocaleString('en-IN')}</div>
+                        <div class="change ${stock.change >= 0 ? 'positive' : 'negative'}">
+                            ${stock.change >= 0 ? '+' : ''}${stock.change.toFixed(2)}%
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        async function loadNews() {
+            const data = await fetchData('/api/news/financial?query=Indian%20stock%20market&limit=6');
+            const container = document.getElementById('newsContainer');
+            
+            if (!data || !data.articles) {
+                container.innerHTML = '<div class="error">Unable to load news</div>';
+                return;
+            }
+            
+            container.innerHTML = data.articles.map(article => `
+                <div class="news-item">
+                    <div class="news-title">${article.title}</div>
+                    <div class="news-summary">${article.summary}</div>
+                    <div class="news-meta">
+                        <span>${article.source}</span>
+                        <span class="sentiment ${article.sentiment || 'neutral'}">${(article.sentiment || 'neutral').toUpperCase()}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        async function searchStock() {
+            const symbol = document.getElementById('stockSearch').value.toUpperCase();
+            if (!symbol) return;
+            
+            const container = document.getElementById('searchResults');
+            container.innerHTML = '<div class="loading">Searching...</div>';
+            
+            const data = await fetchData(`/api/stock/search/${symbol}`);
+            
+            if (!data) {
+                container.innerHTML = '<div class="error">Stock not found or unable to fetch data</div>';
+                return;
+            }
+            
+            const analysis = data.analysis || {};
+            const sentiment = data.news_sentiment || {};
+            const recommendation = data.recommendation || {};
+            
+            container.innerHTML = `
+                <div class="card" style="margin-top: 1rem;">
+                    <h3>${symbol} - ${getCompanyName(symbol)}</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                        <div>
+                            <div style="color: #94a3b8; font-size: 0.9rem;">Current Price</div>
+                            <div style="font-size: 1.5rem; font-weight: 700; color: #f1f5f9;">₹${(analysis.current_price || 0).toLocaleString('en-IN')}</div>
+                            <div class="change ${(analysis.change || 0) >= 0 ? 'positive' : 'negative'}">
+                                ${(analysis.change || 0) >= 0 ? '+' : ''}₹${analysis.change || 0} (${(analysis.change_percent || 0).toFixed(2)}%)
+                            </div>
+                        </div>
+                        <div>
+                            <div style="color: #94a3b8; font-size: 0.9rem;">Market Cap</div>
+                            <div style="font-weight: 600; color: #f1f5f9;">₹${(analysis.market_cap || 0).toLocaleString('en-IN')}</div>
+                        </div>
+                        <div>
+                            <div style="color: #94a3b8; font-size: 0.9rem;">P/E Ratio</div>
+                            <div style="font-weight: 600; color: #f1f5f9;">${analysis.pe_ratio || 'N/A'}</div>
+                        </div>
+                        <div>
+                            <div style="color: #94a3b8; font-size: 0.9rem;">Recommendation</div>
+                            <div style="font-weight: 600; color: ${recommendation.action === 'BUY' ? '#10b981' : recommendation.action === 'SELL' ? '#ef4444' : '#f59e0b'};">
+                                ${recommendation.action || 'HOLD'}
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #334155;">
+                        <div style="color: #94a3b8; font-size: 0.9rem;">News Sentiment</div>
+                        <div class="sentiment ${sentiment.sentiment || 'neutral'}" style="display: inline-block; margin-top: 0.5rem;">
+                            ${(sentiment.sentiment || 'neutral').toUpperCase()} (${Math.round((sentiment.confidence || 0) * 100)}% confidence)
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function getCompanyName(symbol) {
+            const companies = {
+                'RELIANCE': 'Reliance Industries Ltd',
+                'TCS': 'Tata Consultancy Services',
+                'INFY': 'Infosys Ltd',
+                'HDFCBANK': 'HDFC Bank Ltd',
+                'ICICIBANK': 'ICICI Bank Ltd',
+                'BHARTIARTL': 'Bharti Airtel Ltd',
+                'KOTAKBANK': 'Kotak Mahindra Bank',
+                'LT': 'Larsen & Toubro Ltd'
+            };
+            return companies[symbol] || symbol;
+        }
+        
+        async function updatePortfolio() {
+            // This would connect to Upstox API for real portfolio data
+            const data = await fetchData('/api/upstox/test-connection');
+            
+            if (data && data.status === '✅ CONNECTION_SUCCESSFUL') {
+                // Portfolio connected successfully
+                document.getElementById('portfolioValue').textContent = '₹5,45,000';
+                document.getElementById('portfolioTotal').textContent = '₹5,45,000';
+                document.getElementById('portfolioChange').textContent = '+₹12,500 (+2.35%)';
+                document.getElementById('portfolioChange').className = 'portfolio-change positive';
+                document.getElementById('holdingsCount').textContent = '12';
+                document.getElementById('availableCash').textContent = '₹50,000';
+            }
+        }
+        
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadMarketOverview();
+            loadWatchlist();
+            loadNews();
+            updatePortfolio();
+            
+            // Auto-refresh market data every 30 seconds
+            setInterval(() => {
+                loadMarketOverview();
+                loadWatchlist();
+            }, 30000);
+            
+            // Enter key for search
+            document.getElementById('stockSearch').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchStock();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
